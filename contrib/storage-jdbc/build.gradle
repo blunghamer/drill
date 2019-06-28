@@ -1,0 +1,43 @@
+plugins {
+	id 'com.github.jk1.dependency-license-report' version '0.9'
+	id 'java'
+}
+
+
+//repositories {
+//	jcenter()
+//}
+
+//apply plugin: 'java'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+version = '0.0.1'
+
+// Unable to find transitive dependencies
+repositories {
+    mavenCentral()
+	jcenter()
+	maven {
+      url 'http://repository.mapr.com/maven/'
+    }
+}
+
+dependencies {
+    implementation 'org.apache.drill.exec:drill-java-exec:1.15.0'
+	implementation 'org.apache.calcite:calcite-core:1.16.0'
+}
+/*
+	constraints {
+        implementation('org.apache.calcite:calcite-core:1.16.0-drill-r6') {
+            because 'we are unable to find those with a drill suffix'
+        }
+        implementation('commons-codec:commons-codec:1.11') {
+            because 'version 1.9 pulled from httpclient has bugs affecting this application'
+        }
+    }
+*/
+
+//dependencies {
+//	compile group: 'org.apache.drill.exec', name: 'drill-java-exec', version: '1.14.0'
+//}

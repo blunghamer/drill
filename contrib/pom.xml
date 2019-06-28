@@ -39,15 +39,19 @@
   </dependencies>
 
   <modules>
+   <!-- 
     <module>storage-hbase</module>
     <module>format-maprdb</module>
     <module>format-syslog</module>
     <module>storage-hive</module>
     <module>storage-mongo</module>
+    -->
     <module>storage-jdbc</module>
+    <!-- 
     <module>storage-kafka</module>
     <module>storage-kudu</module>
     <module>storage-opentsdb</module>
+    -->
     <module>data</module>
     <module>udfs</module>
   </modules>

@@ -84,6 +84,8 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
         String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
         "mysqlUser",
         "mysqlPass",
+        false,
+        false,
         false);
     jdbcStorageConfig.setEnabled(true);
 
@@ -99,7 +101,9 @@ public class TestJdbcPluginWithMySQLIT extends ClusterTest {
           String.format("jdbc:mysql://localhost:%s/%s?useJDBCCompliantTimezoneShift=true", mysqlPort, mysqlDBName),
           "mysqlUser",
           "mysqlPass",
-          true);
+          true,
+          false,
+          false);
       jdbcCaseSensitiveStorageConfig.setEnabled(true);
 
       JdbcStoragePlugin jdbcCaseSensitiveStoragePlugin = new JdbcStoragePlugin(jdbcCaseSensitiveStorageConfig,

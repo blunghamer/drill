@@ -187,6 +187,14 @@ class JdbcRecordReader extends AbstractRecordReader {
     try {
       connection = source.getConnection();
       statement = connection.createStatement();
+
+      //START_PATCH_BL
+      if (statement.getFetchSize() != 0 ){
+        logger.info("setting fetchsize from {} to {}", statement.getFetchSize(), 10000);
+        statement.setFetchSize(10000);
+      }
+      //END_PATCH_BL
+
       resultSet = statement.executeQuery(sql);
 
       ResultSetMetaData meta = resultSet.getMetaData();

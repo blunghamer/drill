@@ -75,7 +75,9 @@ public class TestJdbcPluginWithH2IT extends ClusterTest {
         connString,
         "root",
         "root",
-        true);
+        true,
+        false,
+        false);
     jdbcStorageConfig.setEnabled(true);
 
     String pluginName = "h2";

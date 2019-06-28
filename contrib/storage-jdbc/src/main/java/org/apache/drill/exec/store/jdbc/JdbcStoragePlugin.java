@@ -81,7 +81,8 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
   private final DataSource source;
   private final SqlDialect dialect;
   private final DrillJdbcConvention convention;
-
+  private final boolean schemaFilter;
+  private final boolean catalogFilter;
 
   public JdbcStoragePlugin(JdbcStorageConfig config, DrillbitContext context, String name) {
     super(context, name);
@@ -97,6 +98,9 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     if (config.getPassword() != null) {
       source.setPassword(config.getPassword());
     }
+    
+    schemaFilter = config.filterSchema();
+    catalogFilter = config.filterCatalog();
 
     this.source = source;
     this.dialect = JdbcSchema.createDialect(SqlDialectFactoryImpl.INSTANCE, source);
@@ -319,11 +323,17 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
     public JdbcCatalogSchema(String name) {
       super(Collections.emptyList(), name);
-
+      logger.info("JdbcCatalogSchema catalog init with name {}", name);
       try (Connection con = source.getConnection();
            ResultSet set = con.getMetaData().getCatalogs()) {
-        while (set.next()) {
+        while (set.next()) {          
           final String catalogName = set.getString(1);
+          final String conCatalog = con.getCatalog();
+          if (catalogFilter && conCatalog != null && catalogName != null && !conCatalog.equals(catalogName)) {
+            logger.info("jdbc catalog {} skipped, not connection catalog", catalogName);
+            continue;
+          }
+          logger.info("JdbcCatalogSchema catalog {} identified", catalogName);
           CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(
               getSchemaPath(), catalogName, source, dialect, convention, catalogName, null);
           schemaMap.put(schema.getName(), schema);
@@ -334,7 +344,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
       // unable to read catalog list.
       if (schemaMap.isEmpty()) {
-
+        logger.info("Schema map is empty thus adding schemas");
         // try to add a list of schemas to the schema map.
         boolean schemasAdded = addSchemas();
 
@@ -344,6 +354,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
               convention, null, null));
         }
       } else {
+        logger.info("Schema map is not empty filling schemas");
         // We already have catalogs. Add schemas in this context of their catalogs.
         addSchemas();
       }
@@ -360,13 +371,19 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
     }
 
     private boolean addSchemas() {
+      logger.info("JdbcStoragePlugin addSchemas was called");
       boolean added = false;
       try (Connection con = source.getConnection();
            ResultSet set = con.getMetaData().getSchemas()) {
         while (set.next()) {
           final String schemaName = set.getString(1);
           final String catalogName = set.getString(2);
-
+          final String conSchema = con.getSchema();
+          if (schemaFilter && conSchema != null && schemaName != null && !conSchema.equals(schemaName)){
+            logger.info("skipping schema {} not equal conschema {}", schemaName, conSchema);
+            continue;
+          }
+          logger.info("Iterating in schema {} catalog {}", schemaName, catalogName);
           CapitalizingJdbcSchema parentSchema = schemaMap.get(catalogName);
           if (parentSchema == null) {
             CapitalizingJdbcSchema schema = new CapitalizingJdbcSchema(getSchemaPath(), schemaName, source, dialect,
@@ -440,6 +457,7 @@ public class JdbcStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public void registerSchemas(SchemaConfig config, SchemaPlus parent) {
+    logger.info("Registering schemas");
     JdbcCatalogSchema schema = new JdbcCatalogSchema(getName());
     SchemaPlus holder = parent.add(getName(), schema);
     schema.setHolder(holder);
